@@ -18,12 +18,17 @@ public class WSServer {
     static {
         rateThread = new Thread(){
             public void run() {
-                DecimalFormat df = new DecimalFormat("#.####");
+
+                String message = "{\"barcode\":\"OR14042019002\",\"weight\":\"20.09\"}";
+
+//                DecimalFormat df = new DecimalFormat("#.####");
                 while(true)
                 {
-                    double d=2+Math.random();
-                    if(queue!=null)
-                        sendAll("USD Rate: "+df.format(d));
+//                    double d=2+Math.random();
+                    if(queue!=null) {
+                        sendAll(message);
+                    }
+                        //sendAll("USD Rate: "+df.format(d));
                     try {
                         sleep(1000);
                     } catch (InterruptedException e) {
@@ -82,7 +87,7 @@ public class WSServer {
 
     public static void main(String[] args) {
 
-        Server server = new Server("localhost", 8080, "/ws", new HashMap<>(), WSServer.class);
+        Server server = new Server("localhost", 8088, "/ws", new HashMap<>(), WSServer.class);
 
         try {
             server.start();

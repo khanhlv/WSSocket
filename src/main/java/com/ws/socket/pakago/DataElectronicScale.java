@@ -2,7 +2,7 @@ package com.ws.socket.pakago;
 
 public class DataElectronicScale {
     private String weight;
-    private String barCode;
+    private String barcode;
     private String image;
 
     public String getWeight() {
@@ -13,12 +13,12 @@ public class DataElectronicScale {
         this.weight = weight;
     }
 
-    public String getBarCode() {
-        return barCode;
+    public String getBarcode() {
+        return barcode;
     }
 
-    public void setBarCode(String barCode) {
-        this.barCode = barCode;
+    public void setBarcode(String barcode) {
+        this.barcode = barcode;
     }
 
     public String getImage() {

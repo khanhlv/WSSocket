@@ -1,83 +1,67 @@
 package com.ws.socket.pakago;
 
-import com.google.gson.Gson;
 import com.ws.socket.WSClient;
 import com.ws.socket.utils.ResourceUtils;
-import okhttp3.*;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.websocket.*;
-import java.io.File;
-import java.io.IOException;
 import java.net.URI;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 @ClientEndpoint
 public class ElectronicScale {
     private static boolean isDisconnect = false;
     private static int count = 0;
-    private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-    private OkHttpClient client = new OkHttpClient();
-
     private final static Logger LOGGER = LoggerFactory.getLogger(ElectronicScale.class);
+
+    public static Queue<String> linkedQueue = new ConcurrentLinkedQueue<>();
 
     @OnClose
     public void onClose(Session session) {
-        System.out.println(String.format("Close established. session id: %s", session.getId()));
+        System.out.println(String.format("Ng\u1EAFt k\u1EBFt n\u1ED1i [%s]", session.getId()));
         isDisconnect = true;
-        System.out.print("Connecting");
+        System.out.print("\u0110ang k\u1EBFt n\u1ED1i");
     }
 
     @OnOpen
     public void onOpen(Session session) {
         isDisconnect = false;
-        System.out.println(String.format("\nConnection established. session id: %s", session.getId()));
+        System.out.println(String.format("\nM\u1EDF k\u1EBFt n\u1ED1i [%s]", session.getId()));
     }
 
     @OnMessage
     public void onMessage(String message) {
-        LOGGER.info("Nhan thong tin => "+message);
-        DataElectronicScale dataElectronicScale = new Gson().fromJson(message, DataElectronicScale.class);
-
-        if (dataElectronicScale != null && !StringUtils.isAllBlank(dataElectronicScale.getWeight(), dataElectronicScale.getBarCode())) {
-            try {
-                File file = new File(ResourceUtils.getValue("folderImage") + "\\" + dataElectronicScale.getBarCode() + ".png");
-
-                String imageEncode = Base64.encodeBase64String(FileUtils.readFileToByteArray(file));
-
-                dataElectronicScale.setImage(imageEncode);
-
-                String data = post(ResourceUtils.getValue("serviceApi"), new Gson().toJson(dataElectronicScale));
-
-                LOGGER.info("Du lieu tra ve => " + data);
-            } catch (Exception ex) {
-                LOGGER.info("Khong ket noi duoc voi he thong Pakago");
-            }
-        }
+        LOGGER.info(String.format("Th\u00F4ng tin t\u1EEB c\u00E2n \u0111i\u1EC7n t\u1EED [%s]", message));
+        linkedQueue.add(message);
     }
 
     public static void main(String[] args) {
+        new Thread(new ElectronicThread()).start();
+
         WebSocketContainer container = ContainerProvider.getWebSocketContainer();
         Session session = null;
-        System.out.print("Connecting");
+        System.out.print("\u0110ang k\u1EBFt n\u1ED1i");
 
         while (true) {
             showConnect(isDisconnect, session);
 
             try {
                 if (isDisconnect || session == null) {
-                    session = container.connectToServer(WSClient.class, URI.create(ResourceUtils.getValue("websocket")));
+                    session = container.connectToServer(ElectronicScale.class, URI.create(ResourceUtils.getValue("websocket")));
                 }
-
-                Thread.sleep(200);
             } catch (Exception ex) {
                 closeSession(session);
                 session = null;
                 isDisconnect = true;
             }
+
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+            }
+
         }
     }
 
@@ -100,17 +84,6 @@ public class ElectronicScale {
             }
 
             System.out.print(".");
-        }
-    }
-
-    private String post(String url, String json) throws IOException {
-        RequestBody body = RequestBody.create(json, JSON);
-        Request request = new Request.Builder()
-                .url(url)
-                .post(body)
-                .build();
-        try (Response response = client.newCall(request).execute()) {
-            return response.body().string();
         }
     }
 }
